@@ -1,3 +1,5 @@
+import mammoth from 'mammoth';
+
 // ============================================================
 // GEOSERVE File Processor
 // Handles PDF, .docx and legacy .doc files
@@ -31,11 +33,10 @@ export async function processWordFile(file) {
   }
 
   // .docx files — process in browser with mammoth
-  const mammoth = await import('mammoth');
-  const mammothLib = mammoth.default || mammoth;
+  // (mammoth imported statically at top of file)
   const arrayBuffer = await file.arrayBuffer();
 
-  const result = await mammothLib.convertToHtml(
+  const result = await mammoth.convertToHtml(
     { arrayBuffer: arrayBuffer },
     { styleMap: ["strike => s", "s => s"] }
   );
