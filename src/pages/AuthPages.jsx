@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import toast from 'react-hot-toast';
@@ -108,12 +108,46 @@ function GoogleButton({ onClick, loading, label }) {
 
 // ── Login ──────────────────────────────────────────────────
 export function LoginPage() {
-  const { login, loginWithGoogle } = useAuth();
+  const { login, loginWithGoogle, currentUser } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: '', password: '' });
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [checking, setChecking] = useState(true);
+
+  // ── AUTO-BYPASS: if user already logged in (coming from app.ai-geoserves.com),
+  // skip the login screen and go straight to dashboard
+  useEffect(() => {
+    if (currentUser) {
+      navigate('/dashboard', { replace: true });
+    } else {
+      // Give Firebase a moment to restore session before showing login form
+      const timer = setTimeout(() => setChecking(false), 800);
+      return () => clearTimeout(timer);
+    }
+  }, [currentUser, navigate]);
+
+  // Show spinner while checking auth session
+  if (checking) {
+    return (
+      <div style={{
+        minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: 'linear-gradient(135deg, #0f1923 0%, #1a2535 60%, #0f1923 100%)',
+        flexDirection: 'column', gap: 16
+      }}>
+        <div style={{
+          width: 40, height: 40, border: '3px solid rgba(201,168,76,0.2)',
+          borderTopColor: '#c9a84c', borderRadius: '50%',
+          animation: 'spin 0.8s linear infinite'
+        }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, fontFamily: 'monospace' }}>
+          Checking session...
+        </p>
+      </div>
+    );
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
